@@ -277,11 +277,9 @@ export const ui = {
 
             let dateStr = data.bannerInfo.dateStart || "";
             if (dateStr.includes(":")) { dateStr = dateStr.substring(dateStr.indexOf(":") + 1).trim(); }
-
-            let engNameHTML = data.bannerInfo.nameEng ? `<div style="font-size:0.8rem; color:#888; margin-top:2px; margin-bottom:6px;">${data.bannerInfo.nameEng}</div>` : '';
-            let storyHTML = data.bannerInfo.storyName ? `<span style="color:#888; font-size:0.75rem; margin-left:5px;">| 스토리: ${data.bannerInfo.storyName}</span>` : '';
-            let makerHTML = data.bannerInfo.maker ? `<span style="background:#e8f0fe; color:#0277bd; padding:2px 6px; border-radius:4px; margin-right:5px; font-size:0.7rem;">${data.bannerInfo.maker}</span>` : '';
-            let weaponHTML = data.bannerInfo.weapon ? `<span style="background:#fce4ec; color:#8e24aa; padding:2px 6px; border-radius:4px; margin-right:5px; font-size:0.7rem;">${data.bannerInfo.weapon}</span>` : '';
+            
+            // 삭제된 항목들은 렌더링에서 제외합니다
+            let attrBadge = data.bannerInfo.attribute ? `<span style="background:#f4f6f8; padding:2px 6px; border-radius:4px; margin-right:5px; font-size:0.7rem; border:1px solid #e2e8f0;">${data.bannerInfo.attribute}</span>` : '';
 
             const card = document.createElement('div');
             card.className = 'card';
@@ -291,13 +289,11 @@ export const ui = {
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div style="width: 100%;">
                   <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">${data.bannerInfo.nameKor || '이름 없는 배너'}</h3>
-                  ${engNameHTML}
-                  ${dateStr ? `<div style="font-size:0.8rem; color:#888; margin-bottom:8px;">${dateStr} ${storyHTML}</div>` : ''}
+                  ${dateStr ? `<div style="font-size:0.8rem; color:#888; margin-bottom:8px; margin-top:4px;">${dateStr}</div>` : ''}
                   
                   <div style="display:flex; align-items:center; flex-wrap:wrap; gap:5px; margin-bottom:6px;">
                     <span style="background:#f4f6f8; padding:2px 6px; border-radius:4px; font-size:0.75rem; color:var(--text-muted); margin-right:5px; border:1px solid #e2e8f0;">${data.bannerInfo.bannerType || '분류 없음'}</span>
-                    ${makerHTML}
-                    ${weaponHTML}
+                    ${attrBadge}
                     <span style="font-size:0.75rem; color:var(--text-muted); margin-right:5px; margin-left:5px;">${maxPullNum > 0 ? `총 <strong>${maxPullNum}</strong>회 진행` : '총 <strong>0</strong>회 진행'}</span>
                     ${finalGoldBadge}
                   </div>
@@ -337,23 +333,26 @@ export const ui = {
         document.getElementById('btnSaveToDB').innerText = "데이터베이스에 저장하기";
         document.getElementById('btnSaveToDB').style.background = "var(--primary)";
         
+        // 💡 남은 3개 입력칸 및 속성을 초기화
         document.getElementById('nameKor').value = "";
-        document.getElementById('nameEng').value = "";
-        document.getElementById('storyName').value = "";
-        document.getElementById('dateStart').value = "";
         document.getElementById('bannerType').value = "";
+        document.getElementById('dateStart').value = "";
+        this.selectAttr('fire', '작열', 'fire.png'); 
         
         state.pullData = {};
         state.currentPage = 1;
         this.renderPage(state.currentPage);
     },
 
+    // 💡 속성 선택 팝업 및 테두리 색상 변경 복구
     toggleAttrMenu(e) { e.stopPropagation(); document.getElementById('attrOptions').classList.toggle('show'); },
     selectAttr(val, text, imgSrc) {
         document.getElementById('selectedAttrText').innerText = text; document.getElementById('selectedAttrIcon').src = imgSrc;
         const colors = { 'fire': 'var(--attr-fire)', 'wind': 'var(--attr-wind)', 'iron': 'var(--attr-iron)', 'electric': 'var(--attr-electric)', 'water': 'var(--attr-water)' };
-        document.getElementById('nameKor').style.borderLeftColor = colors[val]; document.getElementById('attrOptions').classList.remove('show');
+        document.getElementById('nameKor').style.borderLeftColor = colors[val]; 
+        document.getElementById('attrOptions').classList.remove('show');
     },
+
     selectAccount(btn, accName) {
         const inputBtns = document.querySelectorAll('#view-input .acc-btn');
         inputBtns.forEach(el => el.classList.remove('active')); btn.classList.add('active');
@@ -394,16 +393,22 @@ export const ui = {
 
         state.currentEditId = docId;
 
+        // 💡 남은 3개 입력칸 세팅
         document.getElementById('nameKor').value = targetData.bannerInfo.nameKor || "";
-        document.getElementById('nameEng').value = targetData.bannerInfo.nameEng || "";
-        document.getElementById('storyName').value = targetData.bannerInfo.storyName || "";
         document.getElementById('dateStart').value = targetData.bannerInfo.dateStart || "";
         document.getElementById('bannerType').value = targetData.bannerInfo.bannerType || "";
         
-        const nMaker = document.getElementById('nikkeMaker');
-        if([...nMaker.options].some(o => o.value === targetData.bannerInfo.maker)) nMaker.value = targetData.bannerInfo.maker;
-        const nWeapon = document.getElementById('nikkeWeapon');
-        if([...nWeapon.options].some(o => o.value === targetData.bannerInfo.weapon)) nWeapon.value = targetData.bannerInfo.weapon;
+        // 💡 저장된 속성에 맞춰 테두리 색상과 아이콘 변경
+        const attrText = targetData.bannerInfo.attribute || "작열";
+        const attrMap = {
+            '작열': { val: 'fire', icon: 'fire.png' },
+            '풍압': { val: 'wind', icon: 'wind.png' },
+            '철갑': { val: 'iron', icon: 'iron.png' },
+            '전격': { val: 'electric', icon: 'electric.png' },
+            '수냉': { val: 'water', icon: 'water.png' }
+        };
+        const attrInfo = attrMap[attrText] || attrMap['작열'];
+        this.selectAttr(attrInfo.val, attrText, attrInfo.icon);
 
         document.querySelectorAll('#view-input .acc-btn').forEach(btn => {
             if(btn.innerText === targetData.account) { btn.classList.add('active'); }

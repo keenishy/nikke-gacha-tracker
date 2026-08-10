@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NIKKE Gacha Tracker</title>
   
-  <!-- CSS 연결 -->
   <link rel="stylesheet" href="./css/style.css">
   
-  <!-- PWA 설정 (수정 완료: head 안쪽으로 이동) -->
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#4361ee">
   <link rel="apple-touch-icon" href="./fire.png">
@@ -24,12 +22,16 @@
       <span id="editStatusBadge" style="display:none; font-size:0.85rem; background:#ffe0b2; color:#e67e22; padding:4px 10px; border-radius:12px; margin-left:10px;">✏️ 수정 모드</span>
     </div>
 
-    <!-- 입력창 화면 -->
+    <!-- 💡 수정된 입력창: 4가지 핵심 요소만 남겼습니다 -->
     <div id="view-input" class="module-view active">
       <div class="card">
-        <div class="compact-row">
-          <div class="input-group col-xlarge"><label>한글 이름</label><input type="text" id="nameKor" placeholder="예: 앨리스 : 원더랜드 바니" style="border-left: 4px solid var(--attr-fire);"></div>
-          <div class="input-group col-small" style="min-width: 140px;"><label>속성</label>
+        <div class="compact-row" style="margin-bottom: 0;">
+          <div class="input-group col-large">
+            <label>한글 이름</label>
+            <input type="text" id="nameKor" placeholder="예: 앨리스 : 원더랜드 바니" style="border-left: 4px solid var(--attr-fire);">
+          </div>
+          <div class="input-group col-small" style="min-width: 140px;">
+            <label>속성</label>
             <div class="custom-select-wrapper">
               <div class="custom-select-trigger" onclick="window.ui.toggleAttrMenu(event)">
                 <div class="attr-content"><span id="selectedAttrText">작열</span><img id="selectedAttrIcon" src="fire.png" alt="작열"></div><span style="font-size: 0.7rem; color: #aaa;">▼</span>
@@ -43,23 +45,21 @@
               </div>
             </div>
           </div>
-          <div class="input-group col-small"><label>소속</label><select id="nikkeMaker"><option>엘리시온</option><option>미실리스</option><option>테트라</option><option>필그림</option><option>어브노멀</option></select></div>
-          <div class="input-group col-small"><label>무기</label><select id="nikkeWeapon"><option>SR</option><option>SMG</option><option>SG</option><option>RL</option><option>MG</option><option>AR</option></select></div>
-        </div>
-        <div class="compact-row" style="margin-bottom: 0;">
-          <div class="input-group col-large"><label>영어 이름</label><input type="text" id="nameEng" placeholder="예: Alice: Wonderland Bunny"></div>
           <div class="input-group col-small">
             <label>출시 타입</label>
             <input type="text" id="bannerType" list="bannerTypeList" placeholder="직접입력/선택" autocomplete="off">
             <datalist id="bannerTypeList">
-              <option value="일반 통상 출시"></option><option value="통상 이격 출시"></option><option value="여름 한정 출시"></option><option value="겨울 한정 출시"></option><option value="필그림 픽업"></option><option value="콜라보 한정 출시"></option>
+              <option value="일반 통상 출시"></option>
+              <option value="통상 이격 출시"></option>
+              <option value="여름 한정 출시"></option>
+              <option value="겨울 한정 출시"></option>
+              <option value="필그림 픽업"></option>
+              <option value="콜라보 한정 출시"></option>
             </datalist>
           </div>
-          <div class="input-group col-large"><label>스토리명</label><input type="text" id="storyName" placeholder="예: COIN RUSH"></div>
-          <div class="input-group col-xlarge"><label>모집 기간 (또는 출시일)</label>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <input type="text" id="dateStart" placeholder="예: 2026년 7월 30일" style="flex: 1; padding-left: 5px; padding-right: 5px;">
-            </div>
+          <div class="input-group col-large">
+            <label>모집 기간 (또는 출시일)</label>
+            <input type="text" id="dateStart" placeholder="예: 2026년 7월 30일">
           </div>
         </div>
       </div>
@@ -111,7 +111,6 @@
     <button class="nav-btn tab-btn-history" onclick="window.ui.switchView('history')">보관소</button>
   </div>
 
-  <!-- 스크립트 진입점 (ES6 모듈 사용) -->
   <script type="module" src="./js/main.js"></script>
 </body>
 </html>

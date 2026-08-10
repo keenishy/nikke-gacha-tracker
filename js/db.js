@@ -7,14 +7,15 @@ export const dbService = {
     async saveRecord() {
         try {
             const activeAccount = document.querySelector('#view-input #accountBar .acc-btn.active').innerText;
+            // 💡 4개 항목 외의 없어진 값들은 무리하게 찾지 않고 ""(빈칸)으로 넘겨 에러 방지
             const bannerData = {
                 nameKor: document.getElementById('nameKor').value,
-                nameEng: document.getElementById('nameEng').value,
+                nameEng: "", 
                 attribute: document.getElementById('selectedAttrText').innerText,
-                maker: document.getElementById('nikkeMaker').value,
-                weapon: document.getElementById('nikkeWeapon').value,
+                maker: "", 
+                weapon: "", 
                 bannerType: document.getElementById('bannerType').value,
-                storyName: document.getElementById('storyName').value,
+                storyName: "", 
                 dateStart: document.getElementById('dateStart').value,
                 dateEnd: ""
             };
