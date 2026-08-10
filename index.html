@@ -111,12 +111,12 @@
     </div>
 
     <!-- 3. 통계 화면 -->
-    <div id="view-stats" class="module-view">
+<div id="view-stats" class="module-view">
       <div class="account-bar" style="margin-bottom: 20px;">
         <button class="acc-btn active" onclick="window.stats.render('ALL', this)">📊 전체 통합 통계</button>
         <button class="acc-btn" onclick="window.stats.render('EACH', this)">계정별 통계</button>
-        <!-- 💡 배너별 통계 버튼 추가 -->
-        <button class="acc-btn" onclick="window.stats.render('BANNER', this)">✨ 배너별 통계</button>
+        <!-- 💡 픽업 일정별 통계 버튼으로 수정 -->
+        <button class="acc-btn" onclick="window.stats.render('PICKUP', this)">✨ 픽업 일정별 통계</button>
       </div>
       <div id="statsContainer">
         <p style="text-align: center; color: #aaa; padding: 20px;">통계 데이터를 계산하는 중입니다...</p>

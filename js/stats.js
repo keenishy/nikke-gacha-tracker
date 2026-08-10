@@ -23,8 +23,8 @@ export const stats = {
             accountStats[acc] = { pulls: 0, pickup: 0, spook: 0, pilgrim: 0, goldTicket: 0 };
         });
 
-        // 💡 배너별 데이터 계산용 객체 추가
-        let bannerStats = {};
+        // 💡 픽업 일정별 데이터 계산용 객체 (이번에 새로 추가된 핵심 로직!)
+        let pickupStats = {};
 
         // 모든 기록을 돌며 합산
         state.allHistoryRecords.forEach(record => {
@@ -36,53 +36,65 @@ export const stats = {
                 if (Number(p) > maxPullNum) maxPullNum = Number(p);
             });
 
-            // 💡 배너 정보 기준으로 묶기 위한 키값 생성 (이름 + 날짜)
-            let bannerKey = (record.bannerInfo.nameKor || '이름 없는 배너') + "||" + (record.bannerInfo.dateStart || '');
-            if (!bannerStats[bannerKey]) {
-                bannerStats[bannerKey] = { 
-                    name: record.bannerInfo.nameKor || '이름 없는 배너',
-                    date: record.bannerInfo.dateStart || '',
-                    pulls: 0, pickup: 0, spook: 0, pilgrim: 0, goldTicket: 0 
+            // 💡 픽업 일정별 키 생성 (이름 + 날짜를 합쳐서 고유한 픽업 일정으로 인식)
+            let pName = record.bannerInfo.nameKor || '이름 없는 픽업';
+            let pDate = record.bannerInfo.dateStart || '';
+            let pickupKey = pName + "||" + pDate;
+            
+            if (!pickupStats[pickupKey]) {
+                pickupStats[pickupKey] = { 
+                    name: pName,
+                    date: pDate,
+                    total: { pulls: 0, pickup: 0, spook: 0, pilgrim: 0, goldTicket: 0 },
+                    accounts: {}
                 };
+                // 7개 계정의 빈 칸을 미리 만들어둠
+                state.ACCOUNT_LIST.forEach(acc => {
+                    pickupStats[pickupKey].accounts[acc] = { pulls: 0, pickup: 0, spook: 0, pilgrim: 0, goldTicket: 0 };
+                });
             }
             
             if (accountStats[record.account]) {
                 accountStats[record.account].pulls += maxPullNum;
                 globalStats.pulls += maxPullNum;
             }
-            bannerStats[bannerKey].pulls += maxPullNum; // 해당 배너의 가챠 횟수 합산
+            
+            // 픽업 전체 합산 및 해당 픽업 안의 특정 계정 합산
+            pickupStats[pickupKey].total.pulls += maxPullNum;
+            if (pickupStats[pickupKey].accounts[record.account] !== undefined) {
+                pickupStats[pickupKey].accounts[record.account].pulls += maxPullNum;
+            }
 
             // 세부 SSR 내역 합산
             Object.values(pulls).forEach(pData => {
                 if (pData.details && pData.details.length > 0) {
                     pData.details.forEach(det => {
-                        if (det.type === 'pickup') { 
-                            accountStats[record.account].pickup++; 
-                            globalStats.pickup++; 
-                            bannerStats[bannerKey].pickup++; // 배너별 합산 추가
-                        }
-                        if (det.type === 'spook') { 
-                            accountStats[record.account].spook++; 
-                            globalStats.spook++; 
-                            bannerStats[bannerKey].spook++; // 배너별 합산 추가
-                        }
-                        if (det.type === 'pilgrim') { 
-                            accountStats[record.account].pilgrim++; 
-                            globalStats.pilgrim++; 
-                            bannerStats[bannerKey].pilgrim++; // 배너별 합산 추가
-                        }
-                        if (det.type === 'goldTicket') {
-                            const count = Number(det.name) || 1;
-                            accountStats[record.account].goldTicket += count;
-                            globalStats.goldTicket += count;
-                            bannerStats[bannerKey].goldTicket += count; // 배너별 합산 추가
+                        let t = det.type;
+                        let count = (t === 'goldTicket') ? (Number(det.name) || 1) : 1;
+
+                        if (t === 'pickup' || t === 'spook' || t === 'pilgrim' || t === 'goldTicket') {
+                            if (t !== 'goldTicket') {
+                                accountStats[record.account][t]++; 
+                                globalStats[t]++; 
+                                pickupStats[pickupKey].total[t]++;
+                                if (pickupStats[pickupKey].accounts[record.account] !== undefined) {
+                                    pickupStats[pickupKey].accounts[record.account][t]++;
+                                }
+                            } else {
+                                accountStats[record.account][t] += count; 
+                                globalStats[t] += count; 
+                                pickupStats[pickupKey].total[t] += count;
+                                if (pickupStats[pickupKey].accounts[record.account] !== undefined) {
+                                    pickupStats[pickupKey].accounts[record.account][t] += count;
+                                }
+                            }
                         }
                     });
                 }
             });
         });
 
-        // 카드 생성 함수 (디자인)
+        // 카드 생성 함수 (디자인) - 기존 (전체/계정별)
         const createStatCard = (title, data, subtitle = "") => {
             const totalSSR = data.pickup + data.spook + data.pilgrim;
             const ssrRate = data.pulls > 0 ? ((totalSSR / data.pulls) * 100).toFixed(2) : 0;
@@ -127,17 +139,81 @@ export const stats = {
                 htmlStr = `<p style="text-align:center; padding:20px; color:var(--text-muted);">가챠 기록이 있는 계정이 없습니다.</p>`;
             }
             container.innerHTML = htmlStr;
-        } else if (mode === 'BANNER') {
-            // 💡 배너별 모드일 때 그리기
+        } else if (mode === 'PICKUP') {
+            // 💡 픽업 일정별 모드 전용 UI
             let htmlStr = '';
-            const bannerArray = Object.values(bannerStats);
+            const pickupArray = Object.values(pickupStats);
             
-            if (bannerArray.length === 0) {
-                htmlStr = `<p style="text-align:center; padding:20px; color:var(--text-muted);">가챠 기록이 있는 배너가 없습니다.</p>`;
+            if (pickupArray.length === 0) {
+                htmlStr = `<p style="text-align:center; padding:20px; color:var(--text-muted);">가챠 기록이 있는 픽업 일정이 없습니다.</p>`;
             } else {
-                bannerArray.forEach(bData => {
-                    if(bData.pulls > 0) { // 진행 횟수가 있는 배너만 출력
-                        htmlStr += createStatCard(`✨ ${bData.name} <span style="font-size:0.8rem; color:#888; font-weight:normal;">(7계정 총합)</span>`, bData, bData.date);
+                pickupArray.forEach(pData => {
+                    if(pData.total.pulls > 0) { 
+                        const tData = pData.total;
+                        const totalSSR = tData.pickup + tData.spook + tData.pilgrim;
+                        const ssrRate = tData.pulls > 0 ? ((totalSSR / tData.pulls) * 100).toFixed(2) : 0;
+                        
+                        // 해당 픽업에서의 7계정 상세 결과 표 생성
+                        let tableRows = '';
+                        state.ACCOUNT_LIST.forEach(acc => {
+                            const aData = pData.accounts[acc];
+                            if(aData.pulls > 0 || aData.goldTicket > 0) {
+                                let accShort = acc.replace(/^\d\s/, '');
+                                tableRows += `
+                                    <tr style="border-bottom:1px solid #f0f2f5;">
+                                        <td style="padding:8px 5px; font-weight:bold; color:var(--text-main);">${accShort}</td>
+                                        <td style="padding:8px 5px;">${aData.pulls}</td>
+                                        <td style="padding:8px 5px; color:#e67e22;">${aData.pickup}</td>
+                                        <td style="padding:8px 5px; color:#9b59b6;">${aData.spook}</td>
+                                        <td style="padding:8px 5px; color:#3498db;">${aData.pilgrim}</td>
+                                        <td style="padding:8px 5px; color:#e67e22; font-size:0.75rem;">${aData.goldTicket > 0 ? aData.goldTicket+'장' : '-'}</td>
+                                    </tr>
+                                `;
+                            }
+                        });
+
+                        htmlStr += `
+                          <div class="card" style="margin-bottom: 20px;">
+                            <div style="border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px;">
+                                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-main);">✨ [픽업] ${pData.name}</h3>
+                                ${pData.date ? `<div style="font-size:0.8rem; color:#888; margin-top:4px;">📅 일정: ${pData.date}</div>` : ''}
+                            </div>
+                            
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                              <div style="flex:1; text-align:center;">
+                                <div style="font-size:0.75rem; color:#64748b;">7계정 총 가챠</div>
+                                <div style="font-weight:bold; color:var(--text-main); font-size:1.1rem;">${tData.pulls}회</div>
+                              </div>
+                              <div style="flex:1; text-align:center; border-left:1px solid #e2e8f0;">
+                                <div style="font-size:0.75rem; color:#64748b;">총 픽업</div>
+                                <div style="font-weight:bold; color:#e67e22; font-size:1.1rem;">${tData.pickup}돌파</div>
+                              </div>
+                              <div style="flex:1; text-align:center; border-left:1px solid #e2e8f0;">
+                                <div style="font-size:0.75rem; color:#64748b;">평균 SSR 확률</div>
+                                <div style="font-weight:bold; color:var(--primary); font-size:1.1rem;">${ssrRate}%</div>
+                              </div>
+                            </div>
+
+                            <div style="font-size:0.85rem; font-weight:bold; color:var(--text-main); margin-bottom:8px;">📊 각 계정별 결과</div>
+                            <div class="table-responsive" style="margin-top:0; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
+                                <table style="width:100%; border-collapse:collapse; text-align:center; font-size:0.85rem; min-width:300px;">
+                                    <thead style="background:#f8fafc; color:var(--text-muted); font-size:0.75rem;">
+                                        <tr>
+                                            <th style="padding:8px 5px;">계정</th>
+                                            <th style="padding:8px 5px;">진행횟수</th>
+                                            <th style="padding:8px 5px;">픽업</th>
+                                            <th style="padding:8px 5px;">픽뚫</th>
+                                            <th style="padding:8px 5px;">필그림</th>
+                                            <th style="padding:8px 5px;">골티사용</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${tableRows}
+                                    </tbody>
+                                </table>
+                            </div>
+                          </div>
+                        `;
                     }
                 });
                 if (htmlStr === '') {
