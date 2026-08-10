@@ -1,0 +1,15 @@
+{
+  "name": "니케 가챠 기록기",
+  "short_name": "가챠기록",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#4361ee",
+  "icons": [
+    {
+      "src": "fire.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
