@@ -69,10 +69,13 @@ export const ui = {
                     let badgeText = det.type === 'pickup' ? '픽업' : det.type === 'spook' ? '픽뚫' : det.type === 'pilgrim' ? '필그림' : '골티';
                     let dustHTML = det.type !== 'goldTicket' ? `<label style="font-size:0.8rem; color:#888; display:flex; align-items:center; gap:2px;"><input type="checkbox" ${det.isDust ? 'checked' : ''} onchange="window.ui.updateDetail(${i}, ${idx}, 'isDust', this.checked)">가루</label>` : '';
                     
+                    // 💡 골티일 경우 텍스트를 '몇 장?'으로 변경
+                    let placeholderText = det.type === 'goldTicket' ? '몇 장?' : '누구?';
+                    
                     detailsHTML += `
                       <div class="detail-row">
                         <span class="detail-badge ${badgeClass}">${badgeText}</span>
-                        <input type="text" class="detail-input" placeholder="누구?" value="${det.name}" oninput="window.ui.updateDetail(${i}, ${idx}, 'name', this.value)">
+                        <input type="text" class="detail-input" placeholder="${placeholderText}" value="${det.name}" oninput="window.ui.updateDetail(${i}, ${idx}, 'name', this.value)">
                         ${dustHTML}
                         <button class="btn-remove" onclick="window.ui.removeDetail(${i}, ${idx})">❌</button>
                       </div>
@@ -81,6 +84,8 @@ export const ui = {
             }
 
             const card = document.createElement('div'); card.className = `pull-card ${isBlankState ? 'is-blank' : ''}`; card.id = `card_${i}`;
+            
+            // 💡 메모 입력칸의 placeholder 삭제
             card.innerHTML = `
               <div class="pull-card-top">
                 <div class="badge">${i}회</div>
@@ -97,7 +102,7 @@ export const ui = {
                 <button class="add-btn gold" onclick="window.ui.addDetail(${i}, 'goldTicket')">+ 골티</button>
               </div>
               <div id="details_${i}" style="margin-bottom:8px;">${detailsHTML}</div>
-              <div class="pull-card-bottom"><span style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted); white-space:nowrap;">기타 메모</span><input type="text" placeholder="예: 3회차 퀸시" value="${data.memo}" oninput="window.ui.updateMemo(${i}, this.value)"></div>
+              <div class="pull-card-bottom"><span style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted); white-space:nowrap;">기타 메모</span><input type="text" placeholder="" value="${data.memo}" oninput="window.ui.updateMemo(${i}, this.value)"></div>
             `;
             container.appendChild(card);
         }
@@ -334,7 +339,6 @@ export const ui = {
         document.getElementById('dateStart').value = "";
         this.selectAttr('fire', '작열', 'fire.png'); 
         
-        // 💡 폼 초기화 시, 버튼 위치를 다시 '전체 일괄 등록'으로 돌려놓습니다.
         const inputBtns = document.querySelectorAll('#view-input .acc-btn');
         inputBtns.forEach(el => el.classList.remove('active'));
         document.querySelector('#view-input .btn-all').classList.add('active');
