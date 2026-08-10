@@ -23,7 +23,7 @@ export const stats = {
             accountStats[acc] = { pulls: 0, pickup: 0, spook: 0, pilgrim: 0, goldTicket: 0 };
         });
 
-        // 💡 픽업 일정별 데이터 계산용 객체 (이번에 새로 추가된 핵심 로직!)
+        // 픽업 일정별 데이터 계산용 객체
         let pickupStats = {};
 
         // 모든 기록을 돌며 합산
@@ -36,7 +36,7 @@ export const stats = {
                 if (Number(p) > maxPullNum) maxPullNum = Number(p);
             });
 
-            // 💡 픽업 일정별 키 생성 (이름 + 날짜를 합쳐서 고유한 픽업 일정으로 인식)
+            // 픽업 일정별 키 생성 (이름 + 날짜를 합쳐서 고유한 픽업 일정으로 인식)
             let pName = record.bannerInfo.nameKor || '이름 없는 픽업';
             let pDate = record.bannerInfo.dateStart || '';
             let pickupKey = pName + "||" + pDate;
@@ -140,7 +140,7 @@ export const stats = {
             }
             container.innerHTML = htmlStr;
         } else if (mode === 'PICKUP') {
-            // 💡 픽업 일정별 모드 전용 UI
+            // 픽업 일정별 모드 전용 UI
             let htmlStr = '';
             const pickupArray = Object.values(pickupStats);
             
@@ -153,12 +153,17 @@ export const stats = {
                         const totalSSR = tData.pickup + tData.spook + tData.pilgrim;
                         const ssrRate = tData.pulls > 0 ? ((totalSSR / tData.pulls) * 100).toFixed(2) : 0;
                         
-                        // 해당 픽업에서의 7계정 상세 결과 표 생성
+                        // 💡 각 계정별 SSR 확률(accSsrRate)을 계산해서 표에 추가했습니다!
                         let tableRows = '';
                         state.ACCOUNT_LIST.forEach(acc => {
                             const aData = pData.accounts[acc];
                             if(aData.pulls > 0 || aData.goldTicket > 0) {
                                 let accShort = acc.replace(/^\d\s/, '');
+                                
+                                // 개별 계정 SSR 확률 계산
+                                const accTotalSSR = aData.pickup + aData.spook + aData.pilgrim;
+                                const accSsrRate = aData.pulls > 0 ? ((accTotalSSR / aData.pulls) * 100).toFixed(2) : 0;
+
                                 tableRows += `
                                     <tr style="border-bottom:1px solid #f0f2f5;">
                                         <td style="padding:8px 5px; font-weight:bold; color:var(--text-main);">${accShort}</td>
@@ -166,6 +171,7 @@ export const stats = {
                                         <td style="padding:8px 5px; color:#e67e22;">${aData.pickup}</td>
                                         <td style="padding:8px 5px; color:#9b59b6;">${aData.spook}</td>
                                         <td style="padding:8px 5px; color:#3498db;">${aData.pilgrim}</td>
+                                        <td style="padding:8px 5px; color:var(--primary); font-weight:bold;">${accSsrRate}%</td>
                                         <td style="padding:8px 5px; color:#e67e22; font-size:0.75rem;">${aData.goldTicket > 0 ? aData.goldTicket+'장' : '-'}</td>
                                     </tr>
                                 `;
@@ -196,6 +202,7 @@ export const stats = {
 
                             <div style="font-size:0.85rem; font-weight:bold; color:var(--text-main); margin-bottom:8px;">📊 각 계정별 결과</div>
                             <div class="table-responsive" style="margin-top:0; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
+                                <!-- 💡 표 헤더에 'SSR확률' 열을 추가했습니다 -->
                                 <table style="width:100%; border-collapse:collapse; text-align:center; font-size:0.85rem; min-width:300px;">
                                     <thead style="background:#f8fafc; color:var(--text-muted); font-size:0.75rem;">
                                         <tr>
@@ -204,6 +211,7 @@ export const stats = {
                                             <th style="padding:8px 5px;">픽업</th>
                                             <th style="padding:8px 5px;">픽뚫</th>
                                             <th style="padding:8px 5px;">필그림</th>
+                                            <th style="padding:8px 5px;">SSR확률</th>
                                             <th style="padding:8px 5px;">골티사용</th>
                                         </tr>
                                     </thead>
