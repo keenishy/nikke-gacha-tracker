@@ -275,7 +275,6 @@ export const ui = {
             }
 
             let dateStr = data.bannerInfo.dateStart || "";
-            
             let attrBadge = data.bannerInfo.attribute ? `<span style="background:#f4f6f8; padding:2px 6px; border-radius:4px; margin-right:5px; font-size:0.7rem; border:1px solid #e2e8f0;">${data.bannerInfo.attribute}</span>` : '';
 
             const card = document.createElement('div');
@@ -324,7 +323,6 @@ export const ui = {
         }
     },
 
-    // 💡 새로운 배너를 작성할 때 폼 전체를 초기화합니다.
     clearForm() {
         state.currentEditId = null;
         document.getElementById('editStatusBadge').style.display = 'none';
@@ -336,12 +334,16 @@ export const ui = {
         document.getElementById('dateStart').value = "";
         this.selectAttr('fire', '작열', 'fire.png'); 
         
+        // 💡 폼 초기화 시, 버튼 위치를 다시 '전체 일괄 등록'으로 돌려놓습니다.
+        const inputBtns = document.querySelectorAll('#view-input .acc-btn');
+        inputBtns.forEach(el => el.classList.remove('active'));
+        document.querySelector('#view-input .btn-all').classList.add('active');
+        
         state.pullData = {};
         state.currentPage = 1;
         this.renderPage(state.currentPage);
     },
 
-    // 💡 저장 완료 후, 배너 정보는 남기고 가챠 기록만 비웁니다.
     clearPullsOnly() {
         state.pullData = {};
         state.currentPage = 1;

@@ -6,7 +6,6 @@
   <title>NIKKE Gacha Tracker</title>
   
   <link rel="stylesheet" href="./css/style.css">
-  
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#4361ee">
   <link rel="apple-touch-icon" href="./fire.png">
@@ -22,7 +21,7 @@
       <span id="editStatusBadge" style="display:none; font-size:0.85rem; background:#ffe0b2; color:#e67e22; padding:4px 10px; border-radius:12px; margin-left:10px;">✏️ 수정 모드</span>
     </div>
 
-    <!-- 💡 수정된 입력창: 4가지 핵심 요소만 남겼습니다 -->
+    <!-- 입력창 화면 -->
     <div id="view-input" class="module-view active">
       <div class="card">
         <div class="compact-row" style="margin-bottom: 0;">
@@ -64,8 +63,10 @@
         </div>
       </div>
 
+      <!-- 💡 계정 바: 맨 앞에 일괄 등록 버튼 추가 -->
       <div class="account-bar" id="accountBar">
-        <button class="acc-btn active" onclick="window.ui.selectAccount(this, '1 케니')">1 케니</button>
+        <button class="acc-btn btn-all active" onclick="window.ui.selectAccount(this, 'ALL')">🌟 전체 일괄 등록</button>
+        <button class="acc-btn" onclick="window.ui.selectAccount(this, '1 케니')">1 케니</button>
         <button class="acc-btn" onclick="window.ui.selectAccount(this, '2 키니시')">2 키니시</button>
         <button class="acc-btn" onclick="window.ui.selectAccount(this, '3 키니')">3 키니</button>
         <button class="acc-btn" onclick="window.ui.selectAccount(this, '4 키치')">4 키치</button>

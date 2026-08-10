@@ -6,7 +6,10 @@ import { ui } from "./ui.js";
 export const dbService = {
     async saveRecord() {
         try {
-            const activeAccount = document.querySelector('#view-input #accountBar .acc-btn.active').innerText;
+            // 💡 선택된 버튼이 '전체 일괄 등록'인지 확인합니다.
+            const activeBtn = document.querySelector('#view-input #accountBar .acc-btn.active');
+            const isAllAccounts = activeBtn.classList.contains('btn-all');
+            const activeAccount = isAllAccounts ? 'ALL' : activeBtn.innerText;
             
             const bannerData = {
                 nameKor: document.getElementById('nameKor').value,
@@ -27,19 +30,29 @@ export const dbService = {
                 }
             }
 
-            const record = { account: activeAccount, bannerInfo: bannerData, pullRecords: cleanedPullData };
-
             if (state.currentEditId) {
-                // 수정 모드일 때는 저장 후 보관소로 돌아가며 전체를 비웁니다.
+                // 수정 모드: 보관소에서 특정 1개의 계정만 수정하므로 해당 계정만 업데이트됩니다.
+                const record = { account: activeAccount, bannerInfo: bannerData, pullRecords: cleanedPullData };
                 await updateDoc(doc(db, "gacha_records", state.currentEditId), record);
                 ui.clearForm();
                 ui.switchView('history');
             } else {
-                // 💡 새 기록 저장 시: 뽑기 기록만 비우고 기본 정보는 유지합니다.
-                record.createdAt = serverTimestamp();
-                await addDoc(collection(db, "gacha_records"), record);
-                alert(`[${activeAccount}] 저장 완료! 다음 계정의 기록을 이어서 작성할 수 있습니다.`);
-                ui.clearPullsOnly(); 
+                if (isAllAccounts) {
+                    // 💡 일괄 등록 모드: 7개 계정 모두에게 각각 독립된 빈 기록 생성!
+                    const promises = state.ACCOUNT_LIST.map(acc => {
+                        const record = { account: acc, bannerInfo: bannerData, pullRecords: cleanedPullData, createdAt: serverTimestamp() };
+                        return addDoc(collection(db, "gacha_records"), record);
+                    });
+                    await Promise.all(promises);
+                    alert("✨ 7개 계정 전체에 배너 등록이 완료되었습니다!\n이제 보관소에서 개별 계정의 '수정'을 눌러 가챠 결과를 기록하세요.");
+                    ui.clearForm(); // 일괄 등록 후에는 폼을 싹 비웁니다.
+                } else {
+                    // 단일 계정 저장 모드
+                    const record = { account: activeAccount, bannerInfo: bannerData, pullRecords: cleanedPullData, createdAt: serverTimestamp() };
+                    await addDoc(collection(db, "gacha_records"), record);
+                    alert(`[${activeAccount}] 저장 완료! 다음 계정의 기록을 이어서 작성할 수 있습니다.`);
+                    ui.clearPullsOnly(); 
+                }
             }
         } catch (e) {
             console.error("Error saving document: ", e);
