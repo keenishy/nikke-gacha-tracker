@@ -23,7 +23,7 @@ export const stats = {
             accountStats[acc] = { pulls: 0, pickup: 0, spook: 0, pilgrim: 0, goldTicket: 0 };
         });
 
-        // 픽업 일정별 데이터 계산용 객체
+        // 💡 픽업 일정별 데이터 계산용 객체
         let pickupStats = {};
 
         // 모든 기록을 돌며 합산
@@ -36,10 +36,13 @@ export const stats = {
                 if (Number(p) > maxPullNum) maxPullNum = Number(p);
             });
 
-            // 픽업 일정별 키 생성 (이름 + 날짜를 합쳐서 고유한 픽업 일정으로 인식)
-            let pName = record.bannerInfo.nameKor || '이름 없는 픽업';
-            let pDate = record.bannerInfo.dateStart || '';
-            let pickupKey = pName + "||" + pDate;
+            // 💡 픽업 매칭 기준: 한글 이름과 모집 기간이 비어있어도 고유하게 묶이도록 안전 장치 추가
+            let bannerInfo = record.bannerInfo || {};
+            let pName = (bannerInfo.nameKor || '').trim() || '이름 없는 픽업';
+            let pDate = (bannerInfo.dateStart || '').trim() || '기간 미입력';
+            
+            // 공백 차이로 인한 매칭 오류를 막기 위해 이름과 날짜를 조합
+            let pickupKey = pName + "___" + pDate;
             
             if (!pickupStats[pickupKey]) {
                 pickupStats[pickupKey] = { 
@@ -48,7 +51,6 @@ export const stats = {
                     total: { pulls: 0, pickup: 0, spook: 0, pilgrim: 0, goldTicket: 0 },
                     accounts: {}
                 };
-                // 7개 계정의 빈 칸을 미리 만들어둠
                 state.ACCOUNT_LIST.forEach(acc => {
                     pickupStats[pickupKey].accounts[acc] = { pulls: 0, pickup: 0, spook: 0, pilgrim: 0, goldTicket: 0 };
                 });
@@ -59,7 +61,6 @@ export const stats = {
                 globalStats.pulls += maxPullNum;
             }
             
-            // 픽업 전체 합산 및 해당 픽업 안의 특정 계정 합산
             pickupStats[pickupKey].total.pulls += maxPullNum;
             if (pickupStats[pickupKey].accounts[record.account] !== undefined) {
                 pickupStats[pickupKey].accounts[record.account].pulls += maxPullNum;
@@ -94,7 +95,7 @@ export const stats = {
             });
         });
 
-        // 카드 생성 함수 (디자인) - 기존 (전체/계정별)
+        // 카드 생성 함수 (전체/계정별 통계용)
         const createStatCard = (title, data, subtitle = "") => {
             const totalSSR = data.pickup + data.spook + data.pilgrim;
             const ssrRate = data.pulls > 0 ? ((totalSSR / data.pulls) * 100).toFixed(2) : 0;
@@ -125,13 +126,12 @@ export const stats = {
             `;
         };
 
-        // 선택된 모드에 따라 화면 그리기
         if (mode === 'ALL') {
             container.innerHTML = createStatCard('🌟 모든 계정 통합 통계', globalStats);
         } else if (mode === 'EACH') {
             let htmlStr = '';
             state.ACCOUNT_LIST.forEach(acc => {
-                if(accountStats[acc].pulls > 0) { // 가챠 기록이 있는 계정만 표시
+                if(accountStats[acc].pulls > 0) {
                     htmlStr += createStatCard(acc, accountStats[acc]);
                 }
             });
@@ -140,7 +140,6 @@ export const stats = {
             }
             container.innerHTML = htmlStr;
         } else if (mode === 'PICKUP') {
-            // 픽업 일정별 모드 전용 UI
             let htmlStr = '';
             const pickupArray = Object.values(pickupStats);
             
@@ -153,14 +152,11 @@ export const stats = {
                         const totalSSR = tData.pickup + tData.spook + tData.pilgrim;
                         const ssrRate = tData.pulls > 0 ? ((totalSSR / tData.pulls) * 100).toFixed(2) : 0;
                         
-                        // 💡 각 계정별 SSR 확률(accSsrRate)을 계산해서 표에 추가했습니다!
                         let tableRows = '';
                         state.ACCOUNT_LIST.forEach(acc => {
                             const aData = pData.accounts[acc];
                             if(aData.pulls > 0 || aData.goldTicket > 0) {
                                 let accShort = acc.replace(/^\d\s/, '');
-                                
-                                // 개별 계정 SSR 확률 계산
                                 const accTotalSSR = aData.pickup + aData.spook + aData.pilgrim;
                                 const accSsrRate = aData.pulls > 0 ? ((accTotalSSR / aData.pulls) * 100).toFixed(2) : 0;
 
@@ -202,7 +198,6 @@ export const stats = {
 
                             <div style="font-size:0.85rem; font-weight:bold; color:var(--text-main); margin-bottom:8px;">📊 각 계정별 결과</div>
                             <div class="table-responsive" style="margin-top:0; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
-                                <!-- 💡 표 헤더에 'SSR확률' 열을 추가했습니다 -->
                                 <table style="width:100%; border-collapse:collapse; text-align:center; font-size:0.85rem; min-width:300px;">
                                     <thead style="background:#f8fafc; color:var(--text-muted); font-size:0.75rem;">
                                         <tr>
