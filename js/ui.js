@@ -139,7 +139,6 @@ export const ui = {
                 const group = bannerMap[key];
                 const bInfo = group.info;
                 let dateStr = bInfo.dateStart || "";
-                if (dateStr.includes(":")) { dateStr = dateStr.substring(dateStr.indexOf(":") + 1).trim(); }
                 
                 const card = document.createElement('div');
                 card.className = 'card';
@@ -276,9 +275,7 @@ export const ui = {
             }
 
             let dateStr = data.bannerInfo.dateStart || "";
-            if (dateStr.includes(":")) { dateStr = dateStr.substring(dateStr.indexOf(":") + 1).trim(); }
             
-            // 삭제된 항목들은 렌더링에서 제외합니다
             let attrBadge = data.bannerInfo.attribute ? `<span style="background:#f4f6f8; padding:2px 6px; border-radius:4px; margin-right:5px; font-size:0.7rem; border:1px solid #e2e8f0;">${data.bannerInfo.attribute}</span>` : '';
 
             const card = document.createElement('div');
@@ -327,13 +324,13 @@ export const ui = {
         }
     },
 
+    // 💡 새로운 배너를 작성할 때 폼 전체를 초기화합니다.
     clearForm() {
         state.currentEditId = null;
         document.getElementById('editStatusBadge').style.display = 'none';
         document.getElementById('btnSaveToDB').innerText = "데이터베이스에 저장하기";
         document.getElementById('btnSaveToDB').style.background = "var(--primary)";
         
-        // 💡 남은 3개 입력칸 및 속성을 초기화
         document.getElementById('nameKor').value = "";
         document.getElementById('bannerType').value = "";
         document.getElementById('dateStart').value = "";
@@ -344,7 +341,13 @@ export const ui = {
         this.renderPage(state.currentPage);
     },
 
-    // 💡 속성 선택 팝업 및 테두리 색상 변경 복구
+    // 💡 저장 완료 후, 배너 정보는 남기고 가챠 기록만 비웁니다.
+    clearPullsOnly() {
+        state.pullData = {};
+        state.currentPage = 1;
+        this.renderPage(state.currentPage);
+    },
+
     toggleAttrMenu(e) { e.stopPropagation(); document.getElementById('attrOptions').classList.toggle('show'); },
     selectAttr(val, text, imgSrc) {
         document.getElementById('selectedAttrText').innerText = text; document.getElementById('selectedAttrIcon').src = imgSrc;
@@ -393,12 +396,10 @@ export const ui = {
 
         state.currentEditId = docId;
 
-        // 💡 남은 3개 입력칸 세팅
         document.getElementById('nameKor').value = targetData.bannerInfo.nameKor || "";
         document.getElementById('dateStart').value = targetData.bannerInfo.dateStart || "";
         document.getElementById('bannerType').value = targetData.bannerInfo.bannerType || "";
         
-        // 💡 저장된 속성에 맞춰 테두리 색상과 아이콘 변경
         const attrText = targetData.bannerInfo.attribute || "작열";
         const attrMap = {
             '작열': { val: 'fire', icon: 'fire.png' },
