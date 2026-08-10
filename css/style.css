@@ -28,8 +28,7 @@ body { font-family: 'Pretendard', sans-serif; background: var(--bg-color); color
 .acc-btn { padding: 8px 16px; border: 1px solid var(--border); background: var(--bg-color); border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; transition: 0.2s; color: var(--text-muted); }
 .acc-btn.active { background: var(--text-main); border-color: var(--text-main); color: white; }
 
-.acc-btn.btn-all { border-color: #ffd700; color: #d4af37; background: #fffdf0; }
-.acc-btn.btn-all.active { background: #ffd700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.2); border-color: #ffd700; }
+/* 💡 여기에 있던 노란색 .btn-all 전용 스타일을 삭제했습니다! */
 
 .compact-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 10px; }
 .input-group { flex: 1; min-width: 120px; }

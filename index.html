@@ -14,8 +14,12 @@
 
   <div class="main-content">
     
+    <!-- 💡 수정된 상단 헤더: 기록 밑에 버전(v1.1.0) 추가 -->
     <div class="top-header">
-      <span class="header-tab tab-btn-input active" onclick="window.ui.switchView('input')">기록</span>
+      <div style="position: relative;">
+        <span class="header-tab tab-btn-input active" onclick="window.ui.switchView('input')">기록</span>
+        <span style="position: absolute; left: 50%; transform: translateX(-50%); bottom: -14px; font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; pointer-events: none;">v1.1.0</span>
+      </div>
       <span style="color:var(--border);">|</span>
       <span class="header-tab tab-btn-history" onclick="window.ui.switchView('history')">보관소</span>
       <span id="editStatusBadge" style="display:none; font-size:0.85rem; background:#ffe0b2; color:#e67e22; padding:4px 10px; border-radius:12px; margin-left:10px;">✏️ 수정 모드</span>
@@ -63,9 +67,9 @@
         </div>
       </div>
 
-      <!-- 💡 계정 바: 맨 앞에 일괄 등록 버튼 추가 -->
+      <!-- 💡 버튼 이모지 삭제 -->
       <div class="account-bar" id="accountBar">
-        <button class="acc-btn btn-all active" onclick="window.ui.selectAccount(this, 'ALL')">🌟 전체 일괄 등록</button>
+        <button class="acc-btn btn-all active" onclick="window.ui.selectAccount(this, 'ALL')">전체 일괄 등록</button>
         <button class="acc-btn" onclick="window.ui.selectAccount(this, '1 케니')">1 케니</button>
         <button class="acc-btn" onclick="window.ui.selectAccount(this, '2 키니시')">2 키니시</button>
         <button class="acc-btn" onclick="window.ui.selectAccount(this, '3 키니')">3 키니</button>
@@ -91,7 +95,7 @@
     <!-- 보관소 화면 -->
     <div id="view-history" class="module-view">
       <div class="account-bar" style="margin-bottom: 20px;">
-        <button class="acc-btn btn-all" onclick="window.ui.filterHistory('ALL', this)">🌟 전체 통합</button>
+        <button class="acc-btn btn-all" onclick="window.ui.filterHistory('ALL', this)">전체 통합</button>
         <button class="acc-btn active" onclick="window.ui.filterHistory('1 케니', this)">1 케니</button>
         <button class="acc-btn" onclick="window.ui.filterHistory('2 키니시', this)">2 키니시</button>
         <button class="acc-btn" onclick="window.ui.filterHistory('3 키니', this)">3 키니</button>
