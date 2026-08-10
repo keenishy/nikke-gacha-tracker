@@ -1,31 +1,16 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NIKKE Gacha Tracker</title>
-  
-  <link rel="stylesheet" href="./css/style.css">
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#4361ee">
-  <link rel="apple-touch-icon" href="./fire.png">
-</head>
-<body>
-
-  <div class="main-content">
-    
-    <!-- 💡 수정된 상단 헤더: 기록 밑에 버전(v1.1.0) 추가 -->
-    <div class="top-header">
+<div class="top-header">
       <div style="position: relative;">
         <span class="header-tab tab-btn-input active" onclick="window.ui.switchView('input')">기록</span>
-        <span style="position: absolute; left: 50%; transform: translateX(-50%); bottom: -14px; font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; pointer-events: none;">v1.1.0</span>
+        <span style="position: absolute; left: 50%; transform: translateX(-50%); bottom: -14px; font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; pointer-events: none;">v1.2.0</span>
       </div>
       <span style="color:var(--border);">|</span>
       <span class="header-tab tab-btn-history" onclick="window.ui.switchView('history')">보관소</span>
+      <span style="color:var(--border);">|</span>
+      <span class="header-tab tab-btn-stats" onclick="window.ui.switchView('stats')">통계</span>
       <span id="editStatusBadge" style="display:none; font-size:0.85rem; background:#ffe0b2; color:#e67e22; padding:4px 10px; border-radius:12px; margin-left:10px;">✏️ 수정 모드</span>
     </div>
 
-    <!-- 입력창 화면 -->
+    <!-- 입력창 화면 (기존과 동일) -->
     <div id="view-input" class="module-view active">
       <div class="card">
         <div class="compact-row" style="margin-bottom: 0;">
@@ -67,7 +52,6 @@
         </div>
       </div>
 
-      <!-- 💡 버튼 이모지 삭제 -->
       <div class="account-bar" id="accountBar">
         <button class="acc-btn btn-all active" onclick="window.ui.selectAccount(this, 'ALL')">전체 일괄 등록</button>
         <button class="acc-btn" onclick="window.ui.selectAccount(this, '1 케니')">1 케니</button>
@@ -92,7 +76,7 @@
       <button class="btn-reset" onclick="window.ui.clearForm()">🔄 새 배너 기록하기 (입력칸 비우기)</button>
     </div>
 
-    <!-- 보관소 화면 -->
+    <!-- 보관소 화면 (기존과 동일) -->
     <div id="view-history" class="module-view">
       <div class="account-bar" style="margin-bottom: 20px;">
         <button class="acc-btn btn-all" onclick="window.ui.filterHistory('ALL', this)">전체 통합</button>
@@ -104,18 +88,26 @@
         <button class="acc-btn" onclick="window.ui.filterHistory('6 키키', this)">6 키키</button>
         <button class="acc-btn" onclick="window.ui.filterHistory('7 키피', this)">7 키피</button>
       </div>
-
       <div id="historyContainer">
         <p style="text-align: center; color: #aaa; padding: 20px;">데이터를 불러오는 중입니다...</p>
       </div>
     </div>
+
+    <!-- 💡 신규: 통계 화면 -->
+    <div id="view-stats" class="module-view">
+      <div class="account-bar" style="margin-bottom: 20px;">
+        <button class="acc-btn active" onclick="window.stats.render('ALL', this)">📊 전체 통합 통계</button>
+        <button class="acc-btn" onclick="window.stats.render('EACH', this)">계정별 통계</button>
+      </div>
+      <div id="statsContainer">
+        <p style="text-align: center; color: #aaa; padding: 20px;">통계 데이터를 계산하는 중입니다...</p>
+      </div>
+    </div>
+
   </div>
 
   <div class="bottom-nav">
     <button class="nav-btn tab-btn-input active" onclick="window.ui.switchView('input')">기록</button>
     <button class="nav-btn tab-btn-history" onclick="window.ui.switchView('history')">보관소</button>
+    <button class="nav-btn tab-btn-stats" onclick="window.ui.switchView('stats')">통계</button>
   </div>
-
-  <script type="module" src="./js/main.js"></script>
-</body>
-</html>

@@ -313,18 +313,26 @@ export const ui = {
         });
     },
 
-    switchView(viewName) {
+switchView(viewName) {
         document.querySelectorAll('.module-view').forEach(el => el.classList.remove('active'));
         document.getElementById('view-' + viewName).classList.add('active');
         
-        document.querySelectorAll('.tab-btn-input').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn-history').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn-input, .tab-btn-history, .tab-btn-stats').forEach(el => el.classList.remove('active'));
         
         if (viewName === 'input') {
             document.querySelectorAll('.tab-btn-input').forEach(el => el.classList.add('active'));
-        } else {
+        } else if (viewName === 'history') {
             document.querySelectorAll('.tab-btn-history').forEach(el => el.classList.add('active'));
             dbService.loadHistory();
+        } else if (viewName === 'stats') {
+            document.querySelectorAll('.tab-btn-stats').forEach(el => el.classList.add('active'));
+            // 통계 탭으로 갈 때 DB 데이터를 불러온 뒤, 전체 통계 렌더링
+            import("./db.js").then(mod => {
+                mod.dbService.loadHistory().then(() => {
+                    const firstBtn = document.querySelector('#view-stats .acc-btn');
+                    if(window.stats) window.stats.render('ALL', firstBtn);
+                });
+            });
         }
     },
 
