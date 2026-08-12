@@ -23,7 +23,7 @@ export const stats = {
             accountStats[acc] = { pulls: 0, pickup: 0, spook: 0, pilgrim: 0, goldTicket: 0 };
         });
 
-        // 💡 픽업 일정별 데이터 계산용 객체
+        // 픽업 일정별 데이터 계산용 객체
         let pickupStats = {};
 
         // 모든 기록을 돌며 합산
@@ -36,12 +36,10 @@ export const stats = {
                 if (Number(p) > maxPullNum) maxPullNum = Number(p);
             });
 
-            // 💡 픽업 매칭 기준: 한글 이름과 모집 기간이 비어있어도 고유하게 묶이도록 안전 장치 추가
+            // 픽업 일정별 키 생성 (이름 + 날짜)
             let bannerInfo = record.bannerInfo || {};
             let pName = (bannerInfo.nameKor || '').trim() || '이름 없는 픽업';
             let pDate = (bannerInfo.dateStart || '').trim() || '기간 미입력';
-            
-            // 공백 차이로 인한 매칭 오류를 막기 위해 이름과 날짜를 조합
             let pickupKey = pName + "___" + pDate;
             
             if (!pickupStats[pickupKey]) {
@@ -66,36 +64,40 @@ export const stats = {
                 pickupStats[pickupKey].accounts[record.account].pulls += maxPullNum;
             }
 
+            // 💡 SSR 합산을 도와주는 헬퍼 함수
+            const addCount = (type, count) => {
+                if (!count || isNaN(count)) return;
+                if (accountStats[record.account]) accountStats[record.account][type] += count;
+                globalStats[type] += count;
+                pickupStats[pickupKey].total[type] += count;
+                if (pickupStats[pickupKey].accounts[record.account] !== undefined) {
+                    pickupStats[pickupKey].accounts[record.account][type] += count;
+                }
+            };
+
             // 세부 SSR 내역 합산
             Object.values(pulls).forEach(pData => {
+                // 1. 신규 기록 방식 (버튼으로 꼼꼼하게 누른 데이터)
                 if (pData.details && pData.details.length > 0) {
                     pData.details.forEach(det => {
                         let t = det.type;
                         let count = (t === 'goldTicket') ? (Number(det.name) || 1) : 1;
-
                         if (t === 'pickup' || t === 'spook' || t === 'pilgrim' || t === 'goldTicket') {
-                            if (t !== 'goldTicket') {
-                                accountStats[record.account][t]++; 
-                                globalStats[t]++; 
-                                pickupStats[pickupKey].total[t]++;
-                                if (pickupStats[pickupKey].accounts[record.account] !== undefined) {
-                                    pickupStats[pickupKey].accounts[record.account][t]++;
-                                }
-                            } else {
-                                accountStats[record.account][t] += count; 
-                                globalStats[t] += count; 
-                                pickupStats[pickupKey].total[t] += count;
-                                if (pickupStats[pickupKey].accounts[record.account] !== undefined) {
-                                    pickupStats[pickupKey].accounts[record.account][t] += count;
-                                }
-                            }
+                            addCount(t, count);
                         }
                     });
+                } 
+                // 2. 💡 구버전 방식 (엑셀에서 이관된 데이터: 세부 분류 없이 숫자로만 저장된 경우)
+                else {
+                    if (pData.pickup > 0) addCount('pickup', pData.pickup);
+                    if (pData.spook > 0) addCount('spook', pData.spook);
+                    if (pData.pilgrim > 0) addCount('pilgrim', pData.pilgrim);
+                    if (pData.goldTicket > 0) addCount('goldTicket', pData.goldTicket);
                 }
             });
         });
 
-        // 카드 생성 함수 (전체/계정별 통계용)
+        // 카드 생성 함수 (디자인) - 기존 (전체/계정별)
         const createStatCard = (title, data, subtitle = "") => {
             const totalSSR = data.pickup + data.spook + data.pilgrim;
             const ssrRate = data.pulls > 0 ? ((totalSSR / data.pulls) * 100).toFixed(2) : 0;
@@ -126,12 +128,13 @@ export const stats = {
             `;
         };
 
+        // 선택된 모드에 따라 화면 그리기
         if (mode === 'ALL') {
             container.innerHTML = createStatCard('🌟 모든 계정 통합 통계', globalStats);
         } else if (mode === 'EACH') {
             let htmlStr = '';
             state.ACCOUNT_LIST.forEach(acc => {
-                if(accountStats[acc].pulls > 0) {
+                if(accountStats[acc].pulls > 0) { // 가챠 기록이 있는 계정만 표시
                     htmlStr += createStatCard(acc, accountStats[acc]);
                 }
             });
@@ -142,6 +145,8 @@ export const stats = {
         } else if (mode === 'PICKUP') {
             let htmlStr = '';
             const pickupArray = Object.values(pickupStats);
+            
+            // 이름순이나 최근 등록순 등 원하는 정렬이 있다면 이 부분에 추가할 수 있습니다.
             
             if (pickupArray.length === 0) {
                 htmlStr = `<p style="text-align:center; padding:20px; color:var(--text-muted);">가챠 기록이 있는 픽업 일정이 없습니다.</p>`;
