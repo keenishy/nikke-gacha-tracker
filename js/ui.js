@@ -69,7 +69,6 @@ export const ui = {
                     let badgeText = det.type === 'pickup' ? '픽업' : det.type === 'spook' ? '픽뚫' : det.type === 'pilgrim' ? '필그림' : '골티';
                     let dustHTML = det.type !== 'goldTicket' ? `<label style="font-size:0.8rem; color:#888; display:flex; align-items:center; gap:2px;"><input type="checkbox" ${det.isDust ? 'checked' : ''} onchange="window.ui.updateDetail(${i}, ${idx}, 'isDust', this.checked)">가루</label>` : '';
                     
-                    // 💡 골티일 경우 텍스트를 '몇 장?'으로 변경
                     let placeholderText = det.type === 'goldTicket' ? '몇 장?' : '누구?';
                     
                     detailsHTML += `
@@ -84,8 +83,6 @@ export const ui = {
             }
 
             const card = document.createElement('div'); card.className = `pull-card ${isBlankState ? 'is-blank' : ''}`; card.id = `card_${i}`;
-            
-            // 💡 메모 입력칸의 placeholder 삭제
             card.innerHTML = `
               <div class="pull-card-top">
                 <div class="badge">${i}회</div>
@@ -185,9 +182,21 @@ export const ui = {
                     
                     const pulls = group.accounts[acc] ? (group.accounts[acc].pullRecords || {}) : {};
                     
+                    // 💡 핵심 로직: 해당 계정이 실제로 진행한 '최대 가챠 횟수'를 파악합니다.
+                    let accMaxPullNum = 0;
+                    Object.keys(pulls).forEach(p => {
+                        if (Number(p) > accMaxPullNum) accMaxPullNum = Number(p);
+                    });
+                    
                     for(let i=10; i<=maxPullNum; i+=10) {
-                        let cellHTML = this.renderPullCell(pulls[i]);
-                        tableHTML += `<td>${cellHTML}</td>`;
+                        if (i > accMaxPullNum) {
+                            // 💡 진행하지 않은 구간: 아예 기호 없이 어두운 회색으로 비워둡니다.
+                            tableHTML += `<td style="background-color: #f1f5f9; border: 1px solid #e2e8f0;"></td>`;
+                        } else {
+                            // 💡 진행은 했으나 SSR을 못 먹은 구간(또는 먹은 구간): '-' 또는 데이터 렌더링
+                            let cellHTML = this.renderPullCell(pulls[i]);
+                            tableHTML += `<td>${cellHTML}</td>`;
+                        }
                     }
                     tableHTML += `</tr>`;
                 });
@@ -313,7 +322,7 @@ export const ui = {
         });
     },
 
-switchView(viewName) {
+    switchView(viewName) {
         document.querySelectorAll('.module-view').forEach(el => el.classList.remove('active'));
         document.getElementById('view-' + viewName).classList.add('active');
         
@@ -326,7 +335,6 @@ switchView(viewName) {
             dbService.loadHistory();
         } else if (viewName === 'stats') {
             document.querySelectorAll('.tab-btn-stats').forEach(el => el.classList.add('active'));
-            // 통계 탭으로 갈 때 DB 데이터를 불러온 뒤, 전체 통계 렌더링
             import("./db.js").then(mod => {
                 mod.dbService.loadHistory().then(() => {
                     const firstBtn = document.querySelector('#view-stats .acc-btn');

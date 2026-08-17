@@ -87,12 +87,34 @@ export const stats = {
                         }
                     });
                 } 
-                // 2. 💡 구버전 방식 (엑셀에서 이관된 데이터: 세부 분류 없이 숫자로만 저장된 경우)
+                // 2. 💡 구버전 (기타 메모로 들어간 데이터 스마트 판독)
                 else {
-                    if (pData.pickup > 0) addCount('pickup', pData.pickup);
-                    if (pData.spook > 0) addCount('spook', pData.spook);
-                    if (pData.pilgrim > 0) addCount('pilgrim', pData.pilgrim);
-                    if (pData.goldTicket > 0) addCount('goldTicket', pData.goldTicket);
+                    let memo = (pData.memo || "").trim();
+                    let isRealBlank = pData.isBlank || pData.isAllBlue || pData.isAllPurple || memo.toLowerCase() === 'x' || memo === "꽝" || memo === "";
+
+                    if (!isRealBlank) {
+                        // 메모에 특정 키워드가 있는지 확인
+                        let isSpook = memo.includes("픽뚫");
+                        let isPilgrim = memo.includes("필그림");
+                        let isGold = memo.includes("골티") || memo.includes("마일리지");
+                        
+                        if (isGold) {
+                            addCount('goldTicket', 1);
+                        } else if (isPilgrim) {
+                            addCount('pilgrim', 1);
+                        } else if (isSpook) {
+                            addCount('spook', 1);
+                        } else {
+                            // 특정 키워드 없이 글자만 적혀있다면 (예: "마르차나") 픽업으로 간주!
+                            addCount('pickup', 1);
+                        }
+                    } else {
+                        // 만약 빈칸이지만 예전 로직으로 숫자가 들어가 있다면 안전장치로 합산
+                        if (pData.pickup > 0) addCount('pickup', pData.pickup);
+                        if (pData.spook > 0) addCount('spook', pData.spook);
+                        if (pData.pilgrim > 0) addCount('pilgrim', pData.pilgrim);
+                        if (pData.goldTicket > 0) addCount('goldTicket', pData.goldTicket);
+                    }
                 }
             });
         });
@@ -134,7 +156,7 @@ export const stats = {
         } else if (mode === 'EACH') {
             let htmlStr = '';
             state.ACCOUNT_LIST.forEach(acc => {
-                if(accountStats[acc].pulls > 0) { // 가챠 기록이 있는 계정만 표시
+                if(accountStats[acc].pulls > 0) { 
                     htmlStr += createStatCard(acc, accountStats[acc]);
                 }
             });
@@ -145,8 +167,6 @@ export const stats = {
         } else if (mode === 'PICKUP') {
             let htmlStr = '';
             const pickupArray = Object.values(pickupStats);
-            
-            // 이름순이나 최근 등록순 등 원하는 정렬이 있다면 이 부분에 추가할 수 있습니다.
             
             if (pickupArray.length === 0) {
                 htmlStr = `<p style="text-align:center; padding:20px; color:var(--text-muted);">가챠 기록이 있는 픽업 일정이 없습니다.</p>`;
